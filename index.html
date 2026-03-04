@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>貓咪大戰爭 - 究極抽卡模擬</title>
+    <style>
+        :root {
+            --rare-color: #7bd1ff;
+            --super-rare-color: #ffeb3b;
+            --uber-rare-color: #ff5722;
+            --legend-color: #e040fb;
+        }
+        body { background-color: #222; color: white; font-family: 'Microsoft JhengHei', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .game-box { width: 400px; text-align: center; background: #333; padding: 30px; border: 5px solid #555; border-radius: 20px; position: relative; }
+        
+        /* 轉蛋本體動畫 */
+        #capsule {
+            width: 120px; height: 120px; background: linear-gradient(to bottom, #ffeb3b 50%, #fff 50%);
+            border-radius: 50%; margin: 30px auto; border: 4px solid #000;
+            display: none; position: relative; transition: transform 0.3s;
+        }
+        .shake { animation: shake 0.5s infinite; }
+        @keyframes shake {
+            0% { transform: rotate(0deg) translate(2px, 2px); }
+            25% { transform: rotate(5deg) translate(-2px, -2px); }
+            50% { transform: rotate(-5deg) translate(2px, -2px); }
+            75% { transform: rotate(5deg) translate(-2px, 2px); }
+            100% { transform: rotate(0deg) translate(2px, 2px); }
+        }
+
+        /* 爆開動畫 */
+        .pop { animation: pop 0.4s ease-out forwards; }
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        /* 閃光背景 */
+        #flash {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; opacity: 0; z-index: 10;
+        }
+        .flash-active { animation: flashEffect 0.8s ease-out; }
+        @keyframes flashEffect {
+            0% { opacity: 1; background: white; }
+            100% { opacity: 0; }
+        }
+
+        .result-text { font-size: 28px; font-weight: bold; margin-top: 20px; min-height: 40px; }
+        .btn-group { margin-top: 30px; }
+        button { 
+            padding: 12px 25px; font-size: 18px; cursor: pointer; border-radius: 50px; border: none;
+            background: #fbc02d; color: #000; font-weight: bold; margin: 5px;
+        }
+        button:disabled { background: #666; cursor: not-allowed; }
+        
+        /* 稀有度顏色 */
+        .color-rare { color: var(--rare-color); }
+        .color-super { color: var(--super-rare-color); }
+        .color-uber { color: var(--uber-rare-color); text-shadow: 0 0 10px #ff5722; }
+        .color-legend { color: var(--legend-color); text-shadow: 0 0 15px #e040fb; animation: glow 1s infinite alternate; }
+        @keyframes glow { from { opacity: 0.7; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="flash"></div>
+
+<div class="game-box">
+    <h2 style="color: #fbc02d;">貓咪轉蛋機</h2>
+    <div id="capsule"></div>
+    <div class="result-text" id="result-text">準備開抽！</div>
+    
+    <div class="btn-group">
+        <button id="draw-btn" onclick="startDraw()">150 罐頭抽卡</button>
+    </div>
+    
+    <div style="margin-top: 20px; font-size: 14px; color: #aaa;">
+        傳說 0.3% | 超激 5% | 激稀有 25%
+    </div>
+</div>
+
+<script>
+    const pool = [
+        { name: "傳說：創造神 蓋亞", chance: 0.003, color: "color-legend", sound: "epic" },
+        { name: "超激：幼獸 加歐", chance: 0.05, color: "color-uber", sound: "high" },
+        { name: "激稀有：大狂亂貓", chance: 0.25, color: "color-super", sound: "mid" },
+        { name: "稀有：美容貓", chance: 0.697, color: "color-rare", sound: "low" }
+    ];
+
+    const capsule = document.getElementById('capsule');
+    const resultText = document.getElementById('result-text');
+    const drawBtn = document.getElementById('draw-btn');
+    const flash = document.getElementById('flash');
+
+    function startDraw() {
+        // 1. 初始化狀態
+        drawBtn.disabled = true;
+        resultText.innerText = "轉動中...";
+        capsule.style.display = "block";
+        capsule.className = "shake";
+
+        // 2. 模擬轉蛋機轉動時間 (1.5秒)
+        setTimeout(() => {
+            const rand = Math.random();
+            let cumulative = 0;
+            let result = pool[3];
+
+            for (let cat of pool) {
+                cumulative += cat.chance;
+                if (rand < cumulative) {
+                    result = cat;
+                    break;
+                }
+            }
+
+            // 3. 觸發爆開效果
+            capsule.className = "pop";
+            
+            // 4. 閃光特效
+            flash.style.background = getFlashColor(result.color);
+            flash.classList.add('flash-active');
+
+            setTimeout(() => {
+                flash.classList.remove('flash-active');
+                capsule.style.display = "none";
+                resultText.innerHTML = `<span class="${result.color}">${result.name}</span>`;
+                drawBtn.disabled = false;
+            }, 500);
+
+        }, 1500);
+    }
+
+    function getFlashColor(className) {
+        if (className === 'color-legend') return '#e040fb';
+        if (className === 'color-uber') return '#ff5722';
+        return 'white';
+    }
+</script>
+
+</body>
+</html>
